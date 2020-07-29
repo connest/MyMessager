@@ -6,25 +6,8 @@
 #include <QMessageBox>
 #include <QtNetwork>
 #include <qrsaencryption.h>
+#include <QObject>
 
-bool testEncryptAndDecryptExample() {
-
-    QByteArray pub, priv;
-    QRSAEncryption e(QRSAEncryption::Rsa::RSA_64);
-    e.generatePairKey(pub, priv); // or other rsa size
-
-    QByteArray msg = "test message";
-
-    auto encryptMessage = e.encode(msg, pub);
-
-    if (encryptMessage == msg)
-        return false;
-
-    auto decodeMessage = e.decode(encryptMessage, priv);
-    qDebug() << encryptMessage;
-
-    return decodeMessage == msg;
-}
 
 int main(int argc, char *argv[])
 {
@@ -42,15 +25,50 @@ int main(int argc, char *argv[])
    /* MainWindow w;
     w.show();*/
 
-    /*Server s(4567);
-    Client c(4567);
-    c.secureConnect();*/
 
 
-    if (testEncryptAndDecryptExample()) {
-            qInfo() <<"success!";
-        }
+    new SSLServer(4567);
 
-    return 0;
+    QTimer::singleShot(1000, [&](){
+        Client* c = new Client("localhost" ,4567, &a);
+        c->setNamePassword("client1", "123456");
+        c->secureConnect();
+        c->whoIs("client2", "1234567");
+
+        QObject::connect(c, &Client::peerCreated, [=](Peer* peer)
+        {
+            QObject::connect(peer, &Peer::readSignal, [=](const QString& message)
+            {
+                qDebug() << message;
+            });
+        });
+    });
+
+
+
+    QTimer::singleShot(5000, [&](){
+
+        Client* c1 = new Client("localhost" ,4567, &a);
+        c1->setNamePassword("client2", "1234567");
+        c1->secureConnect();
+        c1->whoIs("client1", "123456");
+
+        QObject::connect(c1, &Client::peerCreated, [&](Peer* peer)
+        {
+            QTimer::singleShot(500, [=]()
+            {
+
+               peer->slotSend("HELLO");
+               QObject::connect(peer, &Peer::readSignal, [=](const QString& message)
+               {
+                   qDebug() << message;
+               });
+            });
+        });
+
+    });
+
+
+
     return a.exec();
 }

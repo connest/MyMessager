@@ -8,7 +8,8 @@ CONFIG += c++17
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
-DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += QT_DEPRECATED_WARNINGS \
+            LOCALHOST_CERTIFICATE
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -17,13 +18,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     Client.cpp \
+    ConnectionModel.cpp \
+    MyMessagerGlobal.cpp \
     Server.cpp \
     main.cpp \
     MainWindow.cpp
 
 HEADERS += \
     Client.h \
+    ConnectionModel.h \
     MainWindow.h \
+    MyMessagerGlobal.h \
     Server.h
 
 # Default rules for deployment.
@@ -32,3 +37,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 include ($$PWD/Qt-Secret/src/Qt-Secret.pri)
+
