@@ -14,9 +14,6 @@ SSLServer::SSLServer(quint16 port, QObject *parent)
 
 void SSLServer::incomingConnection(qintptr socket)
 {
-    // As soon as a client connects, pass its incoming socket id to a
-    // SSLServerConnection child. This child is deleted after the
-    // connection is closed (see the connectionClosed() slot).
     new SSLServerConnection(socket, this);
 }
 
@@ -24,14 +21,10 @@ SSLServerConnection::SSLServerConnection(quint16 socketDescriptor,
                                          QObject *parent)
     : QObject(parent)
 {
-    // Create an SSL socket and make its QTcpSocket use our accepted
-    // socket, then give it the path to our certificate & private key
-    // file. For notes on this file, please check the provided
-    // "server.txt".
+
     socket = new QSslSocket(this);
     socket->setSocketDescriptor(socketDescriptor);
 
-    // Not
     socket->setLocalCertificate(
         "C:/Users/Constatine/Desktop/projects/MyMessager/Certifications/key_c.pem");
     socket->setPrivateKey(
@@ -41,30 +34,23 @@ SSLServerConnection::SSLServerConnection(quint16 socketDescriptor,
     this->socket->setProtocol(QSsl::TlsV1_2);
 
 
-    //ice the platform dependency here; the location of the CA
-    // certificate bundle is specific to the OS.
-    //socket->setPathToCACertDir("/etc/ssl/certs");
 
-    // Connect the SSL socket's signals to our slots.
-    connect(socket, &QSslSocket::connected, this,  &SSLServerConnection::acceptedClient);
-    connect(socket, &QSslSocket::disconnected, this,  &SSLServerConnection::connectionClosed);
-    connect(socket, &QSslSocket::readyRead, this,  &SSLServerConnection::readData);
-    connect(socket, &QSslSocket::errorOccurred, this, &SSLServerConnection::slotError);
-
-    // Call sslAccepted(). After this, when the SSL socket emits
-    // accepted(), we are ready to go. We ignore the return value of
-    // this function, because it will always fail the first time we
-    // call it.
-   // socket->sslAccept();
+    connect(socket, &QSslSocket::connected,
+            this,  &SSLServerConnection::acceptedClient);
+    connect(socket, &QSslSocket::disconnected,
+            this,  &SSLServerConnection::connectionClosed);
+    connect(socket, &QSslSocket::readyRead,
+            this,  &SSLServerConnection::readData);
+    connect(socket, &QSslSocket::errorOccurred,
+            this, &SSLServerConnection::slotError);
 
 
-    //устанвливаем наше соединение по сокету
+
     this->socket->startServerEncryption();
 }
 void SSLServerConnection::sendData(const QByteArray& arr)
 {
     socket->write(arr);
-    //socket->flush();
 }
 void SSLServerConnection::slotError(QAbstractSocket::SocketError err)
 {
@@ -76,8 +62,6 @@ void SSLServerConnection::slotError(QAbstractSocket::SocketError err)
 }
 SSLServerConnection::~SSLServerConnection()
 {
-    // Report that the connection has closed.
-    //qDebug() << connections;
     qDebug("~SSLServerConnection() Connection closed.");
 }
 

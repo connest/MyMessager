@@ -18,32 +18,15 @@ class ConnectionEntry : public QObject {
     QByteArray name;
     QByteArray publicKey;
     QHostAddress IP;
-    int port;
+    quint16 port;
 public:
-    ConnectionEntry(const QByteArray& name = QByteArray(),
-                    const QByteArray& client = QByteArray(),
+    ConnectionEntry(const QByteArray& name      = QByteArray(),
+                    const QByteArray& client    = QByteArray(),
                     const QByteArray& publicKey = QByteArray(),
-                    const QHostAddress& IP = QHostAddress(),
-                    const int& port = 0,
-                    QObject* parent=nullptr)
-        : QObject(parent)
-        , client(client)
-        , name(name)
-        , publicKey(publicKey)
-        , IP(IP)
-        , port(port)
-    {
-
-    }
-    ConnectionEntry(const ConnectionEntry& entry, QObject* parent=nullptr):
-        QObject(parent)
-    {
-        this->client=entry.client;
-        this->publicKey=entry.publicKey;
-        this->name=entry.name;
-        this->IP=entry.IP;
-        this->port=entry.port;
-    }
+                    const QHostAddress& IP      = QHostAddress(),
+                    const quint16& port             = 0,
+                    QObject* parent             = nullptr);
+    ConnectionEntry(const ConnectionEntry& entry, QObject* parent=nullptr);
 
     QByteArray getName() const {return name;}
     QByteArray getPublicKey() const {return publicKey;}
@@ -52,29 +35,15 @@ public:
     QHostAddress getIP() const {return IP;}
     int getPort() const {return port;}
 
-    ConnectionEntry& operator=(const ConnectionEntry& entry)
-    {
-        client      =entry.client;
-        publicKey   =entry.publicKey;
-        name        =entry.name;
-        IP          =entry.IP;
-        port        =entry.port;
-        return *this;
-    }
+    ConnectionEntry &operator=(const ConnectionEntry& entry);
 
-    void show()
-    {
-        qDebug() << (*this);
-    }
+    void show();
     void setPublicKey(const QByteArray &value);
     void setName(const QByteArray &value);
     void setClient(const QByteArray &value);
     void setIP(const QHostAddress &value);
-    void setIP(const QString &value)
-    {
-        IP.setAddress(value);
-    }
-    void setPort(int value);
+    void setIP(const QString &value);
+    void setPort(quint16 value);
 };
 
 Q_DECLARE_METATYPE(ConnectionEntry);

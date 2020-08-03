@@ -20,15 +20,17 @@ SOURCES += \
     Client.cpp \
     ConnectionModel.cpp \
     MyMessagerGlobal.cpp \
+    Peer.cpp \
     Server.cpp \
     main.cpp \
-    MainWindow.cpp
+    MainWindow.cpp \
 
 HEADERS += \
     Client.h \
     ConnectionModel.h \
     MainWindow.h \
     MyMessagerGlobal.h \
+    Peer.h \
     Server.h
 
 # Default rules for deployment.
