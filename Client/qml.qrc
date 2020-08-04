@@ -13,5 +13,6 @@
         <file>QML/Messager/qmldir</file>
         <file>QML/Base/Style.qml</file>
         <file>QML/Base/BorderRect.qml</file>
+        <file>QML/Logic/Logic.js</file>
     </qresource>
 </RCC>

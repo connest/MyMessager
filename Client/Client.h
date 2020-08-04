@@ -35,17 +35,18 @@ public:
     explicit Client(QObject *parent = 0);
     ~Client();
 
-    void secureConnect();
 
     void setNamePassword(const QString& name, const QString& password);
     void setHostPort(const QString& hostname, quint16 port);
-
+public slots:
+    void secureConnect();
     void connect2Peer(const QJsonObject& obj);
     void whoIs(const QString& clientName, const QString& clientPassword);
 
+    void isHostOnline();
 signals:
     void peerCreated(Peer* p);
-
+    void errorSignal(net::Errors);
 
 
 private:

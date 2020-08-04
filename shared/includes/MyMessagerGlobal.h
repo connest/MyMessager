@@ -8,6 +8,12 @@ enum Operations {
     INIT_MESSAGE,
     MESSAGE
 };
+namespace net  {
+
+enum class Errors {
+    CONNECTION_FAILED
+};
+}
 
 #include <QByteArray>
 #include <QJsonValue>

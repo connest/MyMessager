@@ -35,7 +35,7 @@ void Peer::setPubKey(const QByteArray &value)
 
 quint16 Client::setupClientSocket()
 {
-    serv = new QTcpServer(this);
+    serv = new QTcpServer();
     serv->listen();
 
     connect(serv, &QTcpServer::newConnection,
@@ -99,7 +99,7 @@ void Client::slotNewConnection()
     QTcpSocket* s=serv->nextPendingConnection();
     serv->close();
 
-    Peer* p=new Peer(s, this->privKey, this);
+    Peer* p=new Peer(s, this->privKey);
 
     this->privKey.clear();
 
@@ -120,12 +120,15 @@ void Client::slotReadyRead()
 void Client::slotError(QAbstractSocket::SocketError error)
 {
     qDebug() << "Client error: " << socket->errorString()<<error;
+
+    emit errorSignal(net::Errors::CONNECTION_FAILED);
 }
 
 void Client::sslErrors(const QList<QSslError> &errors)
 {
     for(const auto& err: errors)
         qDebug() << "Client ssl error: "<< err;
+    emit errorSignal(net::Errors::CONNECTION_FAILED);
 }
 
 Client::Client(const QString &host, int port, QObject *parent)
@@ -187,8 +190,7 @@ void Client::connect2Peer(const QJsonObject &obj)
     Peer* p=new Peer(
             obj["IP"].toString(),
             obj["port"].toInt(),
-            jsonValue2ByteArray(obj["publicKey"]),
-            this
+            jsonValue2ByteArray(obj["publicKey"])
     );
 
     emit peerCreated(p);
@@ -216,6 +218,11 @@ void Client::whoIs(const QString &clientName, const QString &clientPassword)
     };
 
     send(request);
+
+}
+
+void Client::isHostOnline()
+{
 
 }
 

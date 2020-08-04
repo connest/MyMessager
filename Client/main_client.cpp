@@ -20,13 +20,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    QObject o;
-    QMLConnector q;
-    QThread t;
-    QObject::connect(&app, &QGuiApplication::aboutToQuit, &t, &QThread::quit);
-
-    q.moveToThread(&t);
-    t.start();
+    QMLConnector q(app);
 
     QQmlApplicationEngine engine;
     engine.addImportPath(":/QML");

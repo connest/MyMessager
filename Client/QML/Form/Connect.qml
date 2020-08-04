@@ -1,9 +1,16 @@
 import QtQuick 2.2
 import QtQuick.Layouts 1.15
 import Base 1.0
+import "/QML/Logic/Logic.js" as Logic
 Item {
     id: root
-    anchors.fill: parent
+//    anchors.fill: parent
+
+    Text {
+        text: "Connect to client:"
+        anchors.bottom: grid.top
+        anchors.horizontalCenter: grid.horizontalCenter
+    }
 
     GridLayout {
         id: grid
@@ -15,25 +22,7 @@ Item {
         Layout.maximumHeight: 600
         Layout.maximumWidth: 600
 
-        Item {
-            Layout.preferredWidth: 100
-            Layout.minimumHeight: 50
-            Text {
-                text: "Server"
-                anchors.verticalCenter: parent.verticalCenter
-            }
-        }
 
-        EditLine {
-            id: _host
-
-            Layout.preferredWidth: 200
-
-            height: 20
-            isFocus: true
-
-            KeyNavigation.tab: _login.input
-        }
         Item {
             Layout.preferredWidth: 100
             Layout.minimumHeight: 50
@@ -79,14 +68,11 @@ Item {
                 height: 40
                 text: "Login"
 
-                KeyNavigation.tab: _host.input
+                KeyNavigation.tab: _login.input
 
                 onClicked: {
-                    qmlconnector.setName(_login.input.text)
-                    qmlconnector.setPassword(_password.input.text)
-                    qmlconnector.setHost(_host.input.text)
-                    qmlconnector.onLogin();
-
+                    Logic.setClientParameters(_login.input.text,
+                                             _password.input.text)
                 }
             }
         }

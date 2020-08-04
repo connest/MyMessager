@@ -3,9 +3,6 @@
 
 #include <QObject>
 #include <QtNetwork>
-#include <QDebug>
-#include <QMessageBox>
-
 #include <QJsonObject>
 #include <QJsonDocument>
 

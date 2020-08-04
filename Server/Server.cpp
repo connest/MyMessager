@@ -10,6 +10,7 @@ SSLServer::SSLServer(quint16 port, QObject *parent)
     : QTcpServer(parent)
 {
     listen(QHostAddress::Any, port);
+    qInfo() << "Server started at" << port << "port";
 }
 
 void SSLServer::incomingConnection(qintptr socket)
@@ -26,9 +27,9 @@ SSLServerConnection::SSLServerConnection(quint16 socketDescriptor,
     socket->setSocketDescriptor(socketDescriptor);
 
     socket->setLocalCertificate(
-        "C:/Users/Constatine/Desktop/projects/MyMessager/Certifications/key_c.pem");
+        "C:/Users/Constatine/Desktop/projects/MyMessager/shared/Certifications/key_c.pem");
     socket->setPrivateKey(
-        "C:/Users/Constatine/Desktop/projects/MyMessager/Certifications/key_c.key");
+        "C:/Users/Constatine/Desktop/projects/MyMessager/shared/Certifications/key_c.key");
 
     //указываем версию протокола
     this->socket->setProtocol(QSsl::TlsV1_2);

@@ -1,11 +1,7 @@
 #ifndef CONNECTIONMODEL_H
 #define CONNECTIONMODEL_H
 
-#include <QAbstractListModel>
 #include <QObject>
-#include <QTextStream>
-#include <QDebug>
-#include <QList>
 #include <QtNetwork>
 
 class ConnectionEntry;
