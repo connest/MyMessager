@@ -1,0 +1,5 @@
+module Messager
+
+Messager 1.0 Messager.qml
+MessageModel 1.0 MessageModel.qml
+MessageArea 1.0 MessageArea.qml

@@ -3,46 +3,51 @@
 
 #include <QObject>
 #include <QtNetwork>
+#include <map>
+#include <optional>
 
-class ConnectionEntry;
-QDebug operator<<(QDebug debug, const ConnectionEntry &entry);
-
-class ConnectionEntry : public QObject {
-    Q_GADGET
-
-    QByteArray client;
-    QByteArray name;
-    QByteArray publicKey;
-    QHostAddress IP;
-    quint16 port;
+class Connections {
 public:
-    ConnectionEntry(const QByteArray& name      = QByteArray(),
-                    const QByteArray& client    = QByteArray(),
-                    const QByteArray& publicKey = QByteArray(),
-                    const QHostAddress& IP      = QHostAddress(),
-                    const quint16& port             = 0,
-                    QObject* parent             = nullptr);
-    ConnectionEntry(const ConnectionEntry& entry, QObject* parent=nullptr);
+    class ConnectionsEntry
+    {
+    public:
+        ConnectionsEntry() = default;
+        ConnectionsEntry(QHostAddress info, quint16 port,  QByteArray publicKey);
+        ~ConnectionsEntry() = default;
 
-    QByteArray getName() const {return name;}
-    QByteArray getPublicKey() const {return publicKey;}
+        QHostAddress info() const;
+        void setInfo(const QHostAddress &info);
 
-    QByteArray getClient() const {return client;}
-    QHostAddress getIP() const {return IP;}
-    int getPort() const {return port;}
+        QByteArray publicKey() const;
+        void setPublicKey(const QByteArray &publicKey);
 
-    ConnectionEntry &operator=(const ConnectionEntry& entry);
+        quint16 port() const;
+        void setPort(const quint16 &port);
 
-    void show();
-    void setPublicKey(const QByteArray &value);
-    void setName(const QByteArray &value);
-    void setClient(const QByteArray &value);
-    void setIP(const QHostAddress &value);
-    void setIP(const QString &value);
-    void setPort(quint16 value);
+
+    private:
+        QHostAddress m_info;
+        quint16 m_port;
+        QByteArray m_publicKey;
+    };
+
+    static Connections& instance();
+
+    bool add(QByteArray client, QString IP, quint16 port, QByteArray publicKey);
+    std::pair<ConnectionsEntry, bool> pop(QByteArray client);
+
+    size_t count() const;
+private:
+    Connections();
+    Connections(Connections& conn);
+    Connections& operator=(const Connections& conn);
+    ~Connections();
+
+    // key: client name + password hash
+    static std::map<QByteArray, ConnectionsEntry> m_entries;
 };
 
-Q_DECLARE_METATYPE(ConnectionEntry);
+
 
 
 

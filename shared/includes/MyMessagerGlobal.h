@@ -3,17 +3,11 @@
 
 enum Operations {
     WHOIS,
-    WAIT,
-    CONNECTION,
-    INIT_MESSAGE,
-    MESSAGE
+    REGISTRATION,
+    NO_SUCH_CLIENT,
+    CONNECT_TO_CLIENT
 };
-namespace net  {
 
-enum class Errors {
-    CONNECTION_FAILED
-};
-}
 
 #include <QByteArray>
 #include <QJsonValue>

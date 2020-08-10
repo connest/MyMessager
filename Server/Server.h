@@ -4,9 +4,7 @@
 #include <QObject>
 #include <QtNetwork>
 #include <QJsonObject>
-#include <QJsonDocument>
 
-#include "ConnectionModel.h"
 #include "MyMessagerGlobal.h"
 
 class SSLServerConnection : public QObject
@@ -16,21 +14,24 @@ class SSLServerConnection : public QObject
 public:
     SSLServerConnection(quint16 socket, QObject *parent = 0);
     ~SSLServerConnection();
-    void sendData(const QByteArray& arr);
-public slots:
+private slots:
     void acceptedClient();
     void readData();
     void connectionClosed();
     void slotError(QAbstractSocket::SocketError err);
 
 private:
-    void processData(QJsonDocument& doc);
-    QJsonObject WHOIS(QJsonObject& obj);
-    void WAIT(QJsonObject& obj);
-    ConnectionEntry ConnectionEntryFromResponse(const QJsonObject& obj);
-
     QSslSocket *socket;
-    QVector<ConnectionEntry>::iterator currentEnrty ;
+    void send(const QByteArray& arr);
+
+    void processData(QJsonObject obj);
+
+    void whoIs(QJsonObject obj);
+
+    void send(const QJsonObject &data);
+    void registration(QJsonObject obj);
+
+    void declareQAbstractSocketSocketError();
 };
 
 

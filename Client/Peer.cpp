@@ -1,112 +1,152 @@
 #include "Peer.h"
+#include "MyMessagerGlobal.h"
+#include <qrsaencryption.h>
 
-
-void Peer::send(const QByteArray &data)
+Peer::Peer(const QByteArray& clientPublicKey,
+           QObject *parent)
+    : ConnectionManager(false, parent)
+    , m_clientPublicKey{clientPublicKey}
 {
-    socket->write(QRSAEncryption::encode(data,
-                                         clientPubKey,
-                                         QRSAEncryption::Rsa::RSA_2048));
-}
 
-void Peer::send(const QJsonObject &obj)
-{
-    send(QJsonDocument(obj).toJson());
-}
+    setupConnections();
 
-void Peer::InitMessage()
-{
-    QRSAEncryption::generatePairKey(pubKey,
-                                    privKey,
-                                    QRSAEncryption::Rsa::RSA_2048);
+    connect(this, &ConnectionManager::connectedSignal,
+            this, &Peer::onConnected);
 
-    QJsonObject initRequest = {
-        {"operation", Operations::INIT_MESSAGE},
-        {"publicKey", byteArray2string(pubKey)},
-        {"message", "Init message"}
-    };
-
-    send(initRequest);
-
-    emit connectSignal();
+    createKeys();
+    setGetRaw(true);
 
 }
 
-void Peer::setupSocket()
+Peer::Peer(QAbstractSocket* socket,
+           const QByteArray& publicKey,
+           const QByteArray& privateKey,
+           QObject *parent)
+    : ConnectionManager(socket, false, parent)
+    , m_publicKey{publicKey}
+    , m_privateKey{privateKey}
 {
-    connect(socket, &QTcpSocket::readyRead, this, &Peer::recv);
-    connect(socket, &QTcpSocket::errorOccurred, this, &Peer::slotError);
+    setupConnections();
+    setGetRaw(true);
 }
 
-Peer::Peer(QString host, quint16 port, QByteArray clientPubKey, QObject *parent)
-    : QObject(parent)
-    , clientPubKey(clientPubKey)
+void Peer::sendMessage(QString message)
 {
-    socket = new QTcpSocket(this);
-    setupSocket();
 
-    socket->connectToHost(host, port);
-    InitMessage();
+    sendEncode({
+                   {"type", static_cast<int>(Peer::MessageTypes::MESSAGE)},
+                   {"message", message}
+               });
 }
 
-Peer::Peer(QTcpSocket *socket, QByteArray privKey, QObject *parent)
-    : QObject(parent)
-    , socket(socket)
-    , privKey(privKey)
+QByteArray Peer::publicKey() const
 {
-    setupSocket();
+
+    return m_publicKey;
 }
 
-Peer::~Peer()
+void Peer::setPublicKey(const QByteArray &publicKey)
 {
-    if(socket)
-        socket->deleteLater();
+
+    m_publicKey = publicKey;
 }
 
-void Peer::slotError(QAbstractSocket::SocketError error)
+void Peer::setPrivateKey(const QByteArray &privateKey)
 {
-    qDebug() << this<< " error:" << socket->errorString()<<error;
+
+    m_privateKey = privateKey;
 }
 
-void Peer::connectionClosed()
+QByteArray Peer::clientPublicKey() const
 {
-    if (socket->state() == QAbstractSocket::ClosingState) {
-        connect(socket, &QTcpSocket::disconnected,
-                this, &Peer::deleteLater);
-    } else {
-        deleteLater();
+
+    return m_clientPublicKey;
+}
+
+void Peer::setClientPublicKey(const QByteArray &clientPublicKey)
+{
+
+    m_clientPublicKey = clientPublicKey;
+}
+
+void Peer::setupConnections()
+{
+
+    connect(this, &ConnectionManager::newDataSignalRaw,
+            this, &Peer::decodeData);
+}
+
+void Peer::createKeys()
+{
+
+    QRSAEncryption::generatePairKey(m_publicKey,
+                                    m_privateKey,
+                                    QRSAEncryption::RSA_2048);
+}
+
+void Peer::processData(const QJsonDocument &data)
+{
+
+
+    const QJsonObject& obj{data.object()};
+
+    setClientPublicKey(
+                jsonValue2ByteArray(obj["publicKey"])
+            );
+
+
+    switch(static_cast<Peer::MessageTypes>(obj["type"].toInt()))
+    {
+    case Peer::MessageTypes::INIT_MESSAGE:
         return;
+    case Peer::MessageTypes::MESSAGE:
+    {
+        const QDateTime& time {QDateTime::fromString(obj["time"].toString())};
+        emit newMessageSignal(obj["message"].toString(), time);
+    }
+        break;
+    default:
+        qWarning() << "Bad message type:" << obj["type"].toInt();
+        break;
     }
 }
 
-void Peer::recv()
+void Peer::sendEncode(const QJsonObject &data)
 {
-    QByteArray data = QRSAEncryption::decode(socket->readAll(),
-                                             privKey,
-                                             QRSAEncryption::Rsa::RSA_2048);
 
-    QJsonObject request = QJsonDocument::fromJson(data).object();
+    createKeys();
 
-    clientPubKey = jsonValue2ByteArray(request["publicKey"]);
+    QJsonObject obj{data};
+    obj["publicKey"] = byteArray2string(m_publicKey);
+    obj["time"] = QDateTime::currentDateTimeUtc().toString();
 
-    if(request["operation"] == Operations::INIT_MESSAGE) {
-        emit connectSignal();
-        return ;
-    }
 
-    emit readSignal(request["message"].toString());
+    QByteArray encodedData {QRSAEncryption::encode(QJsonDocument(obj).toJson(),
+                                                   m_clientPublicKey,
+                                                   QRSAEncryption::RSA_2048)};
+    send(encodedData);
 }
 
-void Peer::slotSend(const QString &message)
+void Peer::initMessage()
 {
-    QRSAEncryption::generatePairKey(pubKey,
-                                    privKey,
-                                    QRSAEncryption::Rsa::RSA_2048);
 
-    QJsonObject initRequest = {
-        {"operation",   Operations::MESSAGE},
-        {"publicKey",   byteArray2string(pubKey)},
-        {"message",     message}
-    };
+    sendEncode({
+                   {"type", static_cast<int>(MessageTypes::INIT_MESSAGE)},
+                   {"message", "Init"}
+               });
+}
 
-    send(initRequest);
+void Peer::onConnected()
+{
+
+    initMessage();
+}
+
+void Peer::decodeData(const QByteArray &data)
+{
+
+    QByteArray decodedData {QRSAEncryption::decode(data,
+                                                   m_privateKey,
+                                                   QRSAEncryption::RSA_2048)};
+    processData(QJsonDocument::fromJson(decodedData));
 }

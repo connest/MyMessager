@@ -1,81 +1,130 @@
 #include "ConnectionModel.h"
+#include <QHostInfo>
+#include <QDebug>
 
-QDebug operator<<(QDebug debug, const ConnectionEntry &entry)
+
+
+
+
+std::map<QByteArray, Connections::ConnectionsEntry> Connections::m_entries;
+
+Connections &Connections::instance()
 {
-    QDebugStateSaver saver(debug);
-    debug.nospace()
-            << "ConnectionEntry("   << &entry               << ")\n"
-            << "name: "             << entry.getName()      << "\n"
-            << "client: "           << entry.getClient()    << "\n"
-            << "key: "              << entry.getPublicKey() << "\n"
-            << "IP: "               << entry.getIP()        << "\n"
-            << "port: "             << entry.getPort()      << "\n\n"
-            ;
-    return debug;
+    static Connections c{};
+    return c;
 }
 
-void ConnectionEntry::setName(const QByteArray &value)
+bool Connections::add(QByteArray client, QString IP, quint16 port, QByteArray publicKey)
 {
-    name = value;
+    ConnectionsEntry entry{QHostAddress{IP}, port, publicKey};
+    auto insertResult = m_entries.insert({client, entry});
+
+    /*if(insertResult.second)
+    {
+        qDebug() << "Add element: {\n"
+                 << "\tkey:" << client
+                 << "\n\tvalue: {\n"
+                 << "\t\tIP:" << IP
+                 << "\n\t\tport:" << port
+                 << "\n\t\tpublicKey:" << publicKey
+                 << "\n\t}\n}";
+    }*/
+
+    return insertResult.second;
 }
 
-void ConnectionEntry::setClient(const QByteArray &value)
+std::pair<Connections::ConnectionsEntry, bool> Connections::pop(QByteArray client)
 {
-    client = value;
+    auto entry = m_entries.find(client);
+
+    if(entry != m_entries.end())
+    {
+        Connections::ConnectionsEntry e = entry->second;
+
+        m_entries.erase(entry);
+
+        return {
+            e, true
+        };
+    }
+
+    return {
+        {}, false
+    };
 }
 
-void ConnectionEntry::setIP(const QHostAddress &value)
+size_t Connections::count() const
 {
-    IP = value;
+    return m_entries.size();
 }
 
-void ConnectionEntry::setIP(const QString &value)
-{
-    IP.setAddress(value);
-}
-
-void ConnectionEntry::setPort(quint16 value)
-{
-    port = value;
-}
-
-ConnectionEntry::ConnectionEntry(const QByteArray &name, const QByteArray &client, const QByteArray &publicKey, const QHostAddress &IP, const quint16 &port, QObject *parent)
-    : QObject(parent)
-    , client(client)
-    , name(name)
-    , publicKey(publicKey)
-    , IP(IP)
-    , port(port)
+Connections::Connections()
 {
 
 }
 
-ConnectionEntry::ConnectionEntry(const ConnectionEntry &entry, QObject *parent):
-    QObject(parent)
+Connections::Connections(Connections &conn)
 {
-    this->client    =entry.client;
-    this->publicKey =entry.publicKey;
-    this->name      =entry.name;
-    this->IP        =entry.IP;
-    this->port      =entry.port;
+    Q_UNUSED(conn);
 }
 
-ConnectionEntry &ConnectionEntry::operator=(const ConnectionEntry &entry)
+Connections &Connections::operator=(const Connections &conn)
 {
-    client      =entry.client;
-    publicKey   =entry.publicKey;
-    name        =entry.name;
-    IP          =entry.IP;
-    port        =entry.port;
+    Q_UNUSED(conn)
     return *this;
 }
 
-void ConnectionEntry::show()
+Connections::~Connections()
 {
-    qDebug() << (*this);
+
 }
 
-void ConnectionEntry::setPublicKey(const QByteArray &value)
+
+
+
+
+
+
+
+
+
+
+QHostAddress Connections::ConnectionsEntry::info() const
 {
-    publicKey = value;
+    return m_info;
+}
+
+void Connections::ConnectionsEntry::setInfo(const QHostAddress &info)
+{
+    m_info = info;
+}
+
+QByteArray Connections::ConnectionsEntry::publicKey() const
+{
+    return m_publicKey;
+}
+
+void Connections::ConnectionsEntry::setPublicKey(const QByteArray &publicKey)
+{
+    m_publicKey = publicKey;
+}
+
+quint16 Connections::ConnectionsEntry::port() const
+{
+    return m_port;
+}
+
+void Connections::ConnectionsEntry::setPort(const quint16 &port)
+{
+    m_port = port;
+}
+
+Connections::ConnectionsEntry::ConnectionsEntry(QHostAddress info,
+                                                quint16 port,
+                                                QByteArray publicKey)
+    : m_info{info}
+    , m_port{port}
+    , m_publicKey{publicKey}
+{
+
 }

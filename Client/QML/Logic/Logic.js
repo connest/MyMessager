@@ -1,11 +1,13 @@
-function setLoginParameters(name, password, hostname)
+function setConnectionParameters(hostname,
+                                 name,
+                                 password,
+                                 clientName,
+                                 clientPassword)
 {
-    qmlconnector.setLoginParameters(name, password, hostname)
+    qmlconnector.setConnectionData(hostname,
+                                   name,
+                                   password,
+                                   clientName,
+                                   clientPassword);
+
 }
-
-function setClientParameters(name, password)
-{
-    qmlconnector.setClientParameters(name, password)
-
-}
-

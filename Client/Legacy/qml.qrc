@@ -4,6 +4,8 @@
         <file>QML/Base/CustomButton.qml</file>
         <file>QML/Base/EditLine.qml</file>
         <file>QML/Base/Label.qml</file>
+        <file>QML/Base/Message.qml</file>
+        <file>QML/Base/MessageArea.qml</file>
         <file>QML/Base/qmldir</file>
         <file>QML/Form/Connect.qml</file>
         <file>QML/Form/Login.qml</file>
@@ -12,9 +14,5 @@
         <file>QML/Base/Style.qml</file>
         <file>QML/Base/BorderRect.qml</file>
         <file>QML/Logic/Logic.js</file>
-        <file>QML/Messager/Messager.qml</file>
-        <file>QML/Messager/MessageModel.qml</file>
-        <file>QML/Messager/Message.qml</file>
-        <file>QML/Messager/MessageArea.qml</file>
     </qresource>
 </RCC>

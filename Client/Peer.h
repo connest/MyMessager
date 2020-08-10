@@ -1,65 +1,57 @@
 #ifndef PEER_H
 #define PEER_H
 
-
-#include <QObject>
-#include <QtNetwork>
-#include <QDebug>
-#include "MyMessagerGlobal.h"
-
-#include <QJsonObject>
+#include "ConnectionManager.h"
 #include <QJsonDocument>
+#include <QJsonObject>
 
-#include <qrsaencryption.h>
-
-class Peer : public QObject
+class Peer : public ConnectionManager
 {
     Q_OBJECT
-    QTcpSocket* socket = nullptr;
-
-    QByteArray clientPubKey;
-
-    QByteArray pubKey;
-    QByteArray privKey;
-
-
-    void send(const QByteArray& data);
-
-    void send(const QJsonObject& obj);
-
-    void InitMessage();
-    void setupSocket();
 public:
-    Peer(QString host,
-         quint16 port,
-         QByteArray clientPubKey,
-         QObject* parent = 0);
 
-    Peer(QTcpSocket* socket,
-         QByteArray privKey,
-         QObject* parent = 0);
-    ~Peer();
+    explicit Peer(const QByteArray& clientPublicKey,
+                  QObject *parent = nullptr);
 
-    QByteArray getPubKey() const;
-    void setPubKey(const QByteArray &value);
+    explicit Peer(QAbstractSocket* socket,
+                  const QByteArray& publicKey,
+                  const QByteArray& privateKey,
+                  QObject *parent = nullptr);
 
-    QByteArray getPrivKey() const;
-    void setPrivKey(const QByteArray &value);
+    void sendMessage(QString message);
 
-    QByteArray getClientPubKey() const;
-    void setClientPubKey(const QByteArray &value);
+
+    QByteArray publicKey() const;
+    void setPublicKey(const QByteArray &publicKey);
+
+    void setPrivateKey(const QByteArray &privateKey);
+
+    QByteArray clientPublicKey() const;
+    void setClientPublicKey(const QByteArray &clientPublicKey);
+
+signals:
+    void newMessageSignal(QString message, QDateTime time);
+private:
+
+    QByteArray m_publicKey;
+    QByteArray m_privateKey;
+    QByteArray m_clientPublicKey;
+
+    enum class MessageTypes {
+        INIT_MESSAGE = 1,
+        MESSAGE,
+        ECHO
+    };
+
+    void setupConnections();
+    void createKeys();
+    void processData(const QJsonDocument& data);
+    void sendEncode(const QJsonObject& data);
+    void initMessage();
 
 private slots:
-    void slotError(QAbstractSocket::SocketError error);
-    void connectionClosed();
-    void recv();
-public slots:
-
-    void slotSend(const QString& message);
-signals:
-    void connectSignal();
-    void readSignal(const QString& message);
+    void onConnected();
+    void decodeData(const QByteArray& data);
 };
-
 
 #endif // PEER_H

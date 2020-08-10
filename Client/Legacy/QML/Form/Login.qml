@@ -4,13 +4,7 @@ import Base 1.0
 import "/QML/Logic/Logic.js" as Logic
 Item {
     id: root
-//    anchors.fill: parent
-
-    Text {
-        text: "Connect to client:"
-        anchors.bottom: grid.top
-        anchors.horizontalCenter: grid.horizontalCenter
-    }
+   // anchors.fill: parent
 
     GridLayout {
         id: grid
@@ -22,7 +16,25 @@ Item {
         Layout.maximumHeight: 600
         Layout.maximumWidth: 600
 
+        Item {
+            Layout.preferredWidth: 100
+            Layout.minimumHeight: 50
+            Text {
+                text: "Server"
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
 
+        EditLine {
+            id: _host
+
+            Layout.preferredWidth: 200
+
+            height: 20
+            isFocus: true
+
+            KeyNavigation.tab: _login.input
+        }
         Item {
             Layout.preferredWidth: 100
             Layout.minimumHeight: 50
@@ -38,7 +50,7 @@ Item {
             Layout.preferredWidth: 200
             height: 20
 
-            KeyNavigation.tab: _password
+            KeyNavigation.tab: _password.input
         }
         Item {
             Layout.preferredWidth: 100
@@ -53,7 +65,7 @@ Item {
             id: _password
 
             height: 20
-            echoMode: TextInput.Password
+            isPassword: true
 
             KeyNavigation.tab: _loginButton
         }
@@ -68,11 +80,12 @@ Item {
                 height: 40
                 text: "Login"
 
-                KeyNavigation.tab: _login
+                KeyNavigation.tab: _host.input
 
                 onClicked: {
-                    /*Logic.setClientParameters(_login.input.text,
-                                             _password.input.text)*/
+                    Logic.setLoginParameters(_login.input.text,
+                                       _password.input.text,
+                                       _host.input.text)
                 }
             }
         }

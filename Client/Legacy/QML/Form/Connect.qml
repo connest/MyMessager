@@ -38,7 +38,7 @@ Item {
             Layout.preferredWidth: 200
             height: 20
 
-            KeyNavigation.tab: _password
+            KeyNavigation.tab: _password.input
         }
         Item {
             Layout.preferredWidth: 100
@@ -53,7 +53,7 @@ Item {
             id: _password
 
             height: 20
-            echoMode: TextInput.Password
+            isPassword: true
 
             KeyNavigation.tab: _loginButton
         }
@@ -68,11 +68,11 @@ Item {
                 height: 40
                 text: "Login"
 
-                KeyNavigation.tab: _login
+                KeyNavigation.tab: _login.input
 
                 onClicked: {
-                    /*Logic.setClientParameters(_login.input.text,
-                                             _password.input.text)*/
+                    Logic.setClientParameters(_login.input.text,
+                                             _password.input.text)
                 }
             }
         }

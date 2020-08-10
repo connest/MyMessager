@@ -1,5 +1,6 @@
 QT       += core quick network
 
+greaterThan(QT_MAJOR_VERSION, 4): QT += quick
 
 CONFIG += c++17
 
@@ -8,7 +9,7 @@ CONFIG += c++17
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS \
-           LOCALHOST_CERTIFICATE
+            LOCALHOST_CERTIFICATE
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -16,34 +17,30 @@ DEFINES += QT_DEPRECATED_WARNINGS \
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    Client.cpp \
     $$PWD/../shared/includes/MyMessagerGlobal.cpp \
-    ClientManager.cpp \
-    ConnectionManager.cpp \
-    MessageModel.cpp \
     Peer.cpp \
-    PeerManager.cpp \
-    QmlConnector.cpp \
-    QmlConnectorPrivate.cpp \
-    main.cpp
+    QMLConnector.cpp \
+    main_client.cpp
 
 HEADERS += \
+    Client.h \
     $$PWD/../shared/includes/MyMessagerGlobal.h \
-    ClientManager.h \
-    ConnectionManager.h \
-    MessageModel.h \
     Peer.h \
-    PeerManager.h \
-    QmlConnector.h \
-    QmlConnectorPrivate.h
+    QMLConnector.h
 
 RESOURCES += qml.qrc
 
 INCLUDEPATH += $$PWD/../shared/includes
 
 
-QML_IMPORT_PATH += $$PWD/QML
+QML_IMPORT_PATH += $$PWD/QML/Base \
+                   $$PWD/QML/Form \
+                   $$PWD/QML/Messager
 
-QML2_IMPORT_PATH += $$PWD/QML
+QML2_IMPORT_PATH += $$PWD/QML/Base \
+                   $$PWD/QML/Form \
+                   $$PWD/QML/Messager
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

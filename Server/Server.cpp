@@ -2,9 +2,10 @@
 #include "Server.h"
 
 #include <QtNetwork>
+#include <optional>
+#include <QJsonDocument>
 
-QVector<ConnectionEntry> connections;
-
+#include "ConnectionModel.h"
 
 SSLServer::SSLServer(quint16 port, QObject *parent)
     : QTcpServer(parent)
@@ -32,9 +33,9 @@ SSLServerConnection::SSLServerConnection(quint16 socketDescriptor,
         "C:/Users/Constatine/Desktop/projects/MyMessager/shared/Certifications/key_c.key");
 
     //указываем версию протокола
-    this->socket->setProtocol(QSsl::TlsV1_2);
+    this->socket->setProtocol(QSsl::TlsV1_3);
 
-
+    declareQAbstractSocketSocketError();
 
     connect(socket, &QSslSocket::connected,
             this,  &SSLServerConnection::acceptedClient);
@@ -48,10 +49,18 @@ SSLServerConnection::SSLServerConnection(quint16 socketDescriptor,
 
 
     this->socket->startServerEncryption();
+
+    qInfo() << "New connection from " << socket->peerAddress()<<socket->peerPort();
+    qInfo() << "Entry count:"<<Connections::instance().count();
 }
-void SSLServerConnection::sendData(const QByteArray& arr)
+void SSLServerConnection::send(const QByteArray& arr)
 {
+    //qDebug() << "Server send:" <<arr;
     socket->write(arr);
+}
+void SSLServerConnection::send(const QJsonObject& data)
+{
+    send(QJsonDocument(data).toJson());
 }
 void SSLServerConnection::slotError(QAbstractSocket::SocketError err)
 {
@@ -63,14 +72,11 @@ void SSLServerConnection::slotError(QAbstractSocket::SocketError err)
 }
 SSLServerConnection::~SSLServerConnection()
 {
-    qDebug("~SSLServerConnection() Connection closed.");
+    socket->deleteLater();
 }
 
 void SSLServerConnection::acceptedClient()
 {
-    // Provide feedback to the user about incoming connections. This
-    // slot is only called if the connection was established, so all
-    // communication is now encrypted.
     qDebug("Accepted new client from %s:%d",
            qPrintable(socket->peerAddress().toString()),
            socket->peerPort());
@@ -79,11 +85,8 @@ void SSLServerConnection::acceptedClient()
 
 void SSLServerConnection::readData()
 {
-    // First, read all incoming data from the client. The SSL socket
-    // has already decrypted it for us. We assume that the client uses
-    // a plain text protocol, so we convert the data to a QString.
     QJsonDocument request=QJsonDocument::fromJson(socket->readAll());
-    processData(request);
+    processData(request.object());
 
 
 }
@@ -99,7 +102,14 @@ void SSLServerConnection::connectionClosed()
         return;
     }
 
-    qDebug("Server: Connection closed.");
+}
+
+void SSLServerConnection::declareQAbstractSocketSocketError()
+{
+    static std::once_flag QAbstractSocketSocketErrorDeclared;
+    std::call_once(QAbstractSocketSocketErrorDeclared, [](){
+        qRegisterMetaType<QAbstractSocket::SocketError>();
+    });
 }
 
 
@@ -109,8 +119,72 @@ void SSLServerConnection::connectionClosed()
 
 
 
+void SSLServerConnection::processData(QJsonObject request)
+{
+
+    switch(request["operation"].toInt())
+    {
+    case Operations::WHOIS:
+        whoIs(request);
+        break;
+    case Operations::REGISTRATION:
+        registration(request);
+        break;
+    }
+
+}
+
+void SSLServerConnection::whoIs(QJsonObject obj)
+{
+    const QByteArray client = jsonValue2ByteArray(obj["client"]);
+
+    Connections& c = Connections::instance();
+    auto result = c.pop(client);
+
+    if(result.second)
+    {
+        Connections::ConnectionsEntry value{result.first};
+        send({
+                 {"operation",  Operations::CONNECT_TO_CLIENT},
+                 {"IP",         value.info().toString()},
+                 {"port",       value.port()},
+                 {"publicKey",  byteArray2string(value.publicKey())}
+        });
+    }
+    else
+    {
+        send({
+                 {"operation",  Operations::NO_SUCH_CLIENT}
+        });
+    }
+}
+
+void SSLServerConnection::registration(QJsonObject obj)
+{
+    Connections& c = Connections::instance();
+
+    const QByteArray client     = jsonValue2ByteArray(obj["client"]);
+    const QByteArray publicKey  = jsonValue2ByteArray(obj["publicKey"]);
+
+    bool result =
+            c.add(client,
+                  socket->peerAddress().toString(),
+                  obj["port"].toInt(),
+                  publicKey
+                  );
 
 
+    send({
+             {"operation", Operations::REGISTRATION},
+             {"result", result}
+         });
+}
+
+
+/*
+
+
+QVector<ConnectionEntry> connections;
 
 ConnectionEntry SSLServerConnection::ConnectionEntryFromResponse(const QJsonObject& obj)
 {
@@ -164,20 +238,5 @@ void SSLServerConnection::WAIT(QJsonObject& obj)
 
    // qDebug() << "currentEnrty: " << currentEnrty->getName();
 }
-void SSLServerConnection::processData(QJsonDocument& request)
-{
-    QJsonObject obj=request.object();
-    QJsonDocument response;
+*/
 
-    switch(obj["operation"].toInt())
-    {
-    case Operations::WHOIS:
-        response.setObject(WHOIS(obj));
-        sendData(response.toJson());
-        break;
-     case Operations::WAIT:
-        WAIT(obj);
-        break;
-    }
-
-}

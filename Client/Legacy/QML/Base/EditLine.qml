@@ -1,8 +1,6 @@
 import QtQuick 2.2
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
 
-/*BorderRect {
+BorderRect {
     id: root
 
     property bool isPassword: false
@@ -13,31 +11,15 @@ import QtQuick.Controls.Styles 1.4
     bBorderwidth: 2
     borderColor: Style.primaryColor
 
-
     TextInput {
         id: _input
         clip: true
         anchors.fill: parent
         focus: isFocus
+        //font.pointSize: root.height * 0.5
         anchors.bottom: root.bottom
         echoMode: root.isPassword
                       ? TextInput.Password
                       : TextInput.Normal
-
-        color: Style.textColor
-
-    }
-}
-*/
-
-TextField {
-
-    style: TextFieldStyle {
-        textColor: Style.textColor
-        background: BorderRect {
-            bBorderwidth: 2
-            borderColor: Style.primaryColor
-            innerColor: Style.lowBackgroundColor
-        }
     }
 }
