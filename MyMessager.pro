@@ -1,10 +1,8 @@
-TEMPLATE = SUBDIRS
+TEMPLATE = subdirs
 
-SUBDIRS = \
+SUBDIRS += \
     Server \
     Client
 
-Client.subdir = Client/
-Server.subdir = Server/
 
 CONFIG += ordered
