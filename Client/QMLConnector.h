@@ -3,7 +3,9 @@
 
 #include <QObject>
 #include <memory>
-#include <QQmlContext>
+#include <QThread>
+
+#include "MessageModel.h"
 
 class QmlConnector : public QObject
 {
@@ -19,14 +21,30 @@ public:
                                        QString clientPassword);
     Q_INVOKABLE void send(QString message);
 
+    MessageModel* getModel();
 
-    void registerModel(QQmlContext* context);
+public slots:
+    void onNewMessage(MessageModel::Message message);
+
+
 signals:
     void error();
     void toMessageArea();
+
+    void setConnectionDataSignal(QString hostname,
+                                 QString login,
+                                 QString password,
+                                 QString clientLogin,
+                                 QString clientPassword);
+    void sendSignal(QString message);
+
 private:
     class QmlConnectorPrivate;
-    std::unique_ptr<QmlConnectorPrivate> m_d;
+
+    QmlConnectorPrivate* m_d;
+    QThread* m_t;
+
+    MessageModel m_model;
 };
 
 #endif // QMLCONNECTOR_H

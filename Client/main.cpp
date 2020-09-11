@@ -6,7 +6,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 
-#include "QmlConnector.h"
+#include "QMLConnector.h"
 #include "MessageModel.h"
 int main(int argc, char *argv[])
 {
@@ -32,7 +32,8 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.addImportPath(":/QML");
     engine.rootContext()->setContextProperty("qmlconnector", &c);
-    c.registerModel(engine.rootContext());
+    engine.rootContext()->setContextProperty("CoreMessageModel", c.getModel());
+
 
 
 

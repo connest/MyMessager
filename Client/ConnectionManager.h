@@ -25,6 +25,7 @@ public:
     void connectToHost(QString host, quint16 port);
     ConnectionManager::States waitForConnect();
     void close();
+    void init();
 
     ConnectionManager::States getState() const;
 
@@ -33,6 +34,7 @@ signals:
     void connectedSignal();
     void newDataSignalRaw(const QByteArray& data);
     void newDataSignal(const QJsonDocument& data);
+
 
 protected:
     void send(const QByteArray& data);

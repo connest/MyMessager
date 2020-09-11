@@ -17,14 +17,15 @@ public:
     // returns port & publicKey
     std::pair<quint16, QByteArray> listenToPeer(bool& result);
     void send(QString message);
+    void init();
 signals:
 
     void onConnect();
     void onNewMessage(QString message, QDateTime time);
 
 private:
-    QTcpServer m_server;
-    std::unique_ptr<Peer> m_peer;
+    QTcpServer* m_server;
+    Peer* m_peer;
 
     QByteArray m_publicKey;
     QByteArray m_privateKey;

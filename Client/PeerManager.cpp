@@ -3,24 +3,32 @@
 
 PeerManager::PeerManager(QObject *parent)
     : QObject{parent}
+    , m_server{nullptr}
+    , m_peer{nullptr}
 {
 
 }
 
 PeerManager::~PeerManager()
 {
-    m_server.deleteLater();
+    if(m_server)
+    {
+        m_server->close();
+        m_server->deleteLater();
+    }
+    deleteLater();
 }
 
 bool PeerManager::connectToPeer(QString IP, quint16 port, QByteArray publicKey)
 {
 
     if(!m_peer)
-        m_peer = std::make_unique<Peer>(publicKey);
+        m_peer = new Peer(publicKey);
+    m_peer->init();
 
     m_peer->connectToHost(IP, port);
 
-    connect(m_peer.get(), &Peer::newMessageSignal,
+    connect(m_peer, &Peer::newMessageSignal,
             this, &PeerManager::onNewMessage);
 
    /* if(m_peer->getState() == ConnectionManager::States::OK) {
@@ -37,28 +45,31 @@ bool PeerManager::connectToPeer(QString IP, quint16 port, QByteArray publicKey)
 
 std::pair<quint16, QByteArray> PeerManager::listenToPeer( bool& result)
 {
-    if(m_server.isListening())
+    if(!m_server)
+        m_server = new QTcpServer(this);
+
+    if(m_server->isListening())
     {
         qWarning() << "Server is already listen on"
-                   << m_server.serverPort() << "port";
+                   << m_server->serverPort() << "port";
         result = false;
         return {};
     }
 
-    m_server.listen();
+    m_server->listen();
 
-    connect(&m_server, &QTcpServer::newConnection,
+    connect(m_server, &QTcpServer::newConnection,
             this, &PeerManager::onNewConnection);
 
     createKeys();
 
 
-    qInfo() << "Listen for" << m_server.serverPort() << "port";
+    qInfo() << "Listen for" << m_server->serverPort() << "port";
 
 
     result = true;
     return {
-        m_server.serverPort(),
+        m_server->serverPort(),
         m_publicKey
     };
 }
@@ -72,6 +83,10 @@ void PeerManager::send(QString message)
                       "Peer was not created";
 }
 
+void PeerManager::init()
+{
+}
+
 void PeerManager::createKeys()
 {
     QRSAEncryption::generatePairKey(m_publicKey,
@@ -82,15 +97,16 @@ void PeerManager::createKeys()
 void PeerManager::onNewConnection()
 {
 
-    QTcpSocket* socket = m_server.nextPendingConnection();
+    QTcpSocket* socket = m_server->nextPendingConnection();
     qDebug() << "New peer connection on:" << socket->localPort() << "port";
 
-    m_peer = std::make_unique<Peer>(socket, m_publicKey, m_privateKey);
+    m_peer = new Peer(socket, m_publicKey, m_privateKey);
+    m_peer->init();
     m_publicKey.clear();
     m_privateKey.clear();
 
 
-    connect(m_peer.get(), &Peer::newMessageSignal,
+    connect(m_peer, &Peer::newMessageSignal,
             this, &PeerManager::onNewMessage);
 
     emit onConnect();

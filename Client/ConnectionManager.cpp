@@ -4,10 +4,7 @@ ConnectionManager::ConnectionManager(bool secure, QObject *parent)
     : QObject{parent}
     , m_isSecure{secure}
 {
-    if(secure)
-        setupSecureSocket();
-    else
-        setupTcpSocket();
+
 }
 
 ConnectionManager::ConnectionManager(QAbstractSocket* socket,
@@ -18,11 +15,6 @@ ConnectionManager::ConnectionManager(QAbstractSocket* socket,
     , m_socket{socket}
 {
 
-    if(secure)
-        setupSecureSocket();
-    else
-        setupTcpSocket();
-
 }
 
 ConnectionManager::~ConnectionManager()
@@ -32,6 +24,7 @@ ConnectionManager::~ConnectionManager()
         m_socket->abort();
         m_socket->deleteLater();
     }
+    deleteLater();
 }
 
 void ConnectionManager::connectToHost(QString host, quint16 port)
@@ -45,12 +38,12 @@ void ConnectionManager::connectToHost(QString host, quint16 port)
 
 ConnectionManager::States ConnectionManager::waitForConnect()
 {
-   bool result {m_socket->waitForConnected()};
+    bool result {m_socket->waitForConnected()};
 
-   if(result)
-       return States::OK;
+    if(result)
+        return States::OK;
 
-   return getState();
+    return getState();
 }
 
 void ConnectionManager::setupSecureSocket()
@@ -59,7 +52,7 @@ void ConnectionManager::setupSecureSocket()
     declareQAbstractSocketSocketError();
 
     if(!m_socket)
-        m_socket = new QSslSocket();
+        m_socket = new QSslSocket(this);
 
 
     connect(m_socket, &QSslSocket::readyRead, this, &ConnectionManager::onRead);
@@ -81,7 +74,7 @@ void ConnectionManager::setupTcpSocket()
     declareQAbstractSocketSocketError();
 
     if(!m_socket)
-        m_socket = new QTcpSocket();
+        m_socket = new QTcpSocket(this);
 
     connect(m_socket, &QSslSocket::readyRead, this, &ConnectionManager::onRead);
     connect(m_socket, &QSslSocket::errorOccurred,
@@ -228,6 +221,14 @@ void ConnectionManager::setGetRaw(bool getRaw)
 ConnectionManager::States ConnectionManager::getState() const
 {
     return m_state;
+}
+
+void ConnectionManager::init()
+{
+    if(m_isSecure)
+        setupSecureSocket();
+    else
+        setupTcpSocket();
 }
 
 void ConnectionManager::close()

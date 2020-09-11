@@ -1,6 +1,0 @@
-module Base
-EditLine 1.0 EditLine.qml
-BorderRect 1.0 BorderRect.qml
-CustomButton 1.0 CustomButton.qml
-
-singleton Style 1.0 Style.qml

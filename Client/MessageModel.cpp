@@ -20,26 +20,19 @@ MessageModel::Message::Message(QString messageText,
 {}
 
 
-/*void MessageModel::registerModel(const std::string& moduleName)
-{
-    static std::once_flag flag;
-    std::call_once(flag, [&](){
-        qmlRegisterType<MessageModel>(moduleName.c_str(), 1, 0, "CoreMessageModel");
-    });
-}*/
-
 void MessageModel::add(const MessageModel::Message &mess)
 {
    const std::size_t currentPos {m_messages.size()};
 
     emit beginInsertRows(QModelIndex(), currentPos, currentPos);
     m_messages.push_back(mess);
+
     emit endInsertRows();
 }
 
 MessageModel::MessageModel()
 {
-
+    registerMetaTypeMessage();
     mockData();
 }
 
@@ -90,6 +83,14 @@ void MessageModel::mockData()
 
     QTimer::singleShot(5000, [&](){
         add( Message(QDateTime::currentDateTime(),"This message added dinamicly", false));
+    });
+}
+
+void MessageModel::registerMetaTypeMessage()
+{
+    static std::once_flag flag;
+    std::call_once(flag, [&](){
+        qRegisterMetaType<MessageModel::Message>();
     });
 }
 

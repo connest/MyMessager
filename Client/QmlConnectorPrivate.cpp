@@ -3,20 +3,9 @@
 #include "MessageModel.h"
 QmlConnector::QmlConnectorPrivate::QmlConnectorPrivate(QObject *parent)
     : QObject(parent)
+    , m_client{this}
+    , m_peer{this}
 {
-    QmlConnector* p = qobject_cast<QmlConnector*>(parent);
-
-    connect(p, &QmlConnector::error, &m_client, &ClientManager::errorSignal);
-
-    connect(QCoreApplication::instance(),
-            &QCoreApplication::aboutToQuit,
-            &t,
-            &QThread::quit);
-
-    m_client.moveToThread(&t);
-    m_peer.moveToThread(&t);
-    t.start();
-
     connect(&m_peer, &PeerManager::onNewMessage,
             this, &QmlConnectorPrivate::onNewMessage);
 
@@ -71,16 +60,34 @@ void QmlConnector::QmlConnectorPrivate::setClientParameters(QString clientName,
 
 void QmlConnector::QmlConnectorPrivate::send(QString message)
 {
+    emit newMessageSignal(MessageModel::Message(
+                            QDateTime::currentDateTime(),
+                            message,
+                            true
+                    )
+    );
     m_peer.send(message);
-    m_model.add(MessageModel::Message(QDateTime::currentDateTime(),
-                                      message,
-                                      true));
 
 }
 
-MessageModel *QmlConnector::QmlConnectorPrivate::getModel()
+
+void QmlConnector::QmlConnectorPrivate::setConnectionDataSlot(QString hostname, QString login, QString password, QString clientLogin, QString clientPassword)
 {
-    return &m_model;
+    setLoginParameters(login, password);
+    setClientParameters(clientLogin, clientPassword);
+    connectToServer(hostname);
+
+    whoIs();
+}
+
+void QmlConnector::QmlConnectorPrivate::sendSlot(QString message)
+{
+    send(message);
+}
+void QmlConnector::QmlConnectorPrivate::init()
+{
+    m_client.init();
+    m_peer.init();
 }
 
 void QmlConnector::QmlConnectorPrivate::onNoClient()
@@ -119,8 +126,11 @@ void QmlConnector::QmlConnectorPrivate::onFoundClient(QString IP,
 
 void QmlConnector::QmlConnectorPrivate::onNewMessage(QString message, QDateTime time)
 {
-    m_model.add(MessageModel::Message(time, message, false));
+    emit newMessageSignal(MessageModel::Message(
+                            time,
+                            message,
+                            false
+                    )
+    );
 }
-
-
 

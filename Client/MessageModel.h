@@ -20,8 +20,6 @@ public:
         Message(QString messageText, bool post);
     };
 
-    static void registerModel(const std::string& moduleName);
-
     void add(const Message& mess);
 public:
     MessageModel();
@@ -44,6 +42,9 @@ private:
 
     void mockData();
 
-    };
+    static void registerMetaTypeMessage();
+};
+
+Q_DECLARE_METATYPE(MessageModel::Message)
 
 #endif // MESSAGEMODEL_H

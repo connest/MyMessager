@@ -34,6 +34,7 @@ void ClientManager::processData(const QJsonDocument &data)
     switch(data["operation"].toInt())
     {
     case Operations::NO_SUCH_CLIENT :
+        thread()->sleep(5); // too busy
         emit onNoClient();
         break;
     case Operations::CONNECT_TO_CLIENT:

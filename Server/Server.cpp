@@ -80,6 +80,7 @@ void SSLServerConnection::acceptedClient()
     qDebug("Accepted new client from %s:%d",
            qPrintable(socket->peerAddress().toString()),
            socket->peerPort());
+   // send("Hello");
 
 }
 
